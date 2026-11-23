@@ -52,7 +52,17 @@ pip で導入した実 `qosctl` を相手に `:core:realQosctlTest`（14 件）�
 Xvfb 上の IntelliJ IDEA 2025.3.6.2 に ZIP を GUI から導入し、実 qosctl／qosd と結合して 21 項目を確認した。
 評価中に見つかった表示上の不具合 5 件は修正し、再確認済み。詳細と証跡は [gui-evaluation/README.md](gui-evaluation/README.md)。
 
+## 量子OSイメージ上の評価（実施済み）
+
+QuantumLinuxOS で作成した量子OSイメージ（UEFI・qemu、オフライン）上のデスクトップ評価構成で、ZIP 導入から実行・BUSY・停止までを確認した。
+詳細は [gui-evaluation/quantum-os/README.md](gui-evaluation/quantum-os/README.md)。評価中に見つけた量子OS側の initramfs の不具合は QuantumLinuxOS に修正済み。
+
+## 未解決
+
+- 再起動なしで読み込んだ直後に結果ツールウィンドウが登録されないことがある（再起動で解消、再現条件は未特定）。
+  導入手順で IDE の再起動を案内するか、`require-restart="true"` にするかを決める。
+
 ## 未実施
 
-- 量子OSのデスクトップ評価構成（OS イメージ上、systemd のソケット起動・quantum グループ）での確認。
+- 仮想化支援（KVM）のある実機・仮想機での性能評価。
 - 対象 IDE ビルドの最終固定（現在は 2025.3.6.2 で確認）。

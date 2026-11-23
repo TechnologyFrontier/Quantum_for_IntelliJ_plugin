@@ -1,0 +1,48 @@
+# base system
+systemd
+systemd-sysv
+systemd-boot
+systemd-boot-efi
+udev
+dbus
+login
+passwd
+sudo
+less
+nano
+iproute2
+kmod
+e2fsprogs
+dosfstools
+linux-image-amd64
+initramfs-tools
+# quantum service runtime
+python3
+python3-numpy
+python3-cryptography
+# provides the virtual python3-cffi-backend-api-* that debootstrap cannot resolve
+python3-cffi-backend
+# ---- IDE evaluation configuration only (QIDE-BD 3章: 標準構成とは別) ----
+# desktop session (X server + window manager)
+xserver-xorg-core
+xserver-xorg-input-libinput
+xinit
+x11-xserver-utils
+xauth
+openbox
+xterm
+# libraries used by IntelliJ IDEA (bundled JBR)
+libxtst6
+libxi6
+libxrender1
+libxrandr2
+libfontconfig1
+libfreetype6
+fontconfig
+fonts-dejavu-core
+fonts-noto-cjk
+locales
+# evaluation tooling (input injection, screenshots, host file transfer)
+xdotool
+imagemagick
+procps
