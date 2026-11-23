@@ -1,4 +1,5 @@
-<idea-plugin>
+<!-- 動的ロード直後に結果ツールウィンドウが登録されない事例があったため、導入・更新時は IDE の再起動を必須にする。 -->
+<idea-plugin require-restart="true">
     <id>com.technologyfrontier.quantum-os-ide</id>
     <name>Quantum OS IDE</name>
     <vendor>Technology Frontier</vendor>
