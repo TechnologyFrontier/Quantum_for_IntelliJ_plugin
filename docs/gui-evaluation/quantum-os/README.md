@@ -50,7 +50,7 @@ busybox なしの initramfs で使われる klibc の mount が解釈できな�
 1. **再起動なしで読み込んだ直後、結果ツールウィンドウが登録されないことがある。**
    新しいプロファイルで ZIP を導入し（動的ロード）、その後プロジェクトを開くと、「Quantum Results」がサイドバー・「その他」・View → Tool Windows のいずれにも出なかった。
    IDE を再起動すると現れ、以後は正常に動作した。前回のコンテナ評価では同じ手順で現れており、再現条件は未特定。
-   対策案: 導入後に IDE の再起動を案内する、またはプラグインを再起動必須（`require-restart="true"`）にする。
+   対策: プラグインを再起動必須（`require-restart="true"`）にした（導入・更新時は IDE の再起動が必要）。
 2. **「Plugin 'Quantum OS IDE' might be slowing things down」の表示。**
    （[06](06-slowdown-banner.png)）フリーズ記録を確認したところ、サンプル追加後にファイルを開く IDE 標準処理（`FileEditorManager.openFile`、81 秒）が、プラグインの操作に紐づけて計上されたもの。エミュレーション環境の遅さによる。
 3. **新しいプロファイルでの1回目の Install from Disk は、ZIP をステージングするだけで読み込まれない**（2回目で読み込まれる）。コンテナ評価と同じ IDE 側の挙動。

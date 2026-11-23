@@ -57,10 +57,10 @@ Xvfb 上の IntelliJ IDEA 2025.3.6.2 に ZIP を GUI から導入し、実 qosct
 QuantumLinuxOS で作成した量子OSイメージ（UEFI・qemu、オフライン）上のデスクトップ評価構成で、ZIP 導入から実行・BUSY・停止までを確認した。
 詳細は [gui-evaluation/quantum-os/README.md](gui-evaluation/quantum-os/README.md)。評価中に見つけた量子OS側の initramfs の不具合は QuantumLinuxOS に修正済み。
 
-## 未解決
+## 再起動必須の判断
 
-- 再起動なしで読み込んだ直後に結果ツールウィンドウが登録されないことがある（再起動で解消、再現条件は未特定）。
-  導入手順で IDE の再起動を案内するか、`require-restart="true"` にするかを決める。
+再起動なしで読み込んだ直後に結果ツールウィンドウが登録されない事例（量子OS上の評価）があったため、
+plugin.xml を `require-restart="true"` とし、導入・更新・無効化のたびに IDE の再起動を必須にした。
 
 ## 未実施
 
