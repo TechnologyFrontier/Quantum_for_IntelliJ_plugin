@@ -58,11 +58,21 @@ sealed interface QosFailure {
         override val title: String get() = "${category.label}（終了値 ${category.exitCode}、code: $code）"
         override val detail: String get() = message
         override val guidance: String
-            get() = when {
-                isBusy -> "量子サービスは別の計算を実行中です（サービス全体の同時計算は1件）。計算完了を待ってから再度実行してください。IDEは自動で再試行しません。"
-                category == ErrorCategory.INPUT -> "回路ファイルの内容、shots・seed の値、量子ビット数などの実行上限を確認して修正してください。"
-                category == ErrorCategory.ACCESS -> "量子サービスが起動しているか、利用者が量子サービスの利用権限（quantum グループ等）を持つかを確認してください。権限の変更は管理者に依頼してください。"
-                else -> "計算の失敗、実行期限の超過、または通信切断です。回路の規模やサービスの状態を確認し、必要なら再実行してください。"
+            get() = when (code) {
+                BUSY_CODE -> "量子サービスは別の計算を実行中です（サービス全体の同時計算は1件）。計算完了を待ってから再度実行してください。IDEは自動で再試行しません。"
+                "ACCESS_DENIED" -> "量子サービスの利用権限がありません。利用者が quantum グループに属しているかを管理者に確認してください（IDE から権限は変更しません）。"
+                "SERVICE_UNAVAILABLE" -> "量子サービスに接続できません。量子サービス（qosd.socket）が起動しているかを確認してください。"
+                "BACKEND_LIMIT" -> "実行上限（20 量子ビット）を超えています。量子ビット数を減らしてください。"
+                "CIRCUIT_INVALID", "SCHEMA_UNSUPPORTED" -> "回路 JSON を修正してください（schema_version は 1、measure は最後に1つ、rx・rz には theta が必要）。"
+                "RUN_OPTION_INVALID" -> "shots（1〜100,000）と seed（0〜18446744073709551615 の十進整数）を確認してください。"
+                "FILE_UNREADABLE" -> "回路ファイルを読み取れません。ファイルの場所と読み取り権限を確認してください。"
+                "TIMEOUT" -> "量子サービスの実行期限を超えました。回路の規模（量子ビット数・命令数）や shots を減らしてください。"
+                "TRANSPORT_ERROR" -> "量子サービスとの通信が途中で切れたか、応答が不正でした。サービスの状態を確認して再実行してください。"
+                else -> when (category) {
+                    ErrorCategory.INPUT -> "回路ファイルの内容、shots・seed の値、量子ビット数などの実行上限を確認して修正してください。"
+                    ErrorCategory.ACCESS -> "量子サービスが起動しているか、利用者が量子サービスの利用権限（quantum グループ等）を持つかを確認してください。"
+                    ErrorCategory.EXECUTION -> "計算の失敗、実行期限の超過、または通信切断です。サービスの状態を確認し、必要なら再実行してください。"
+                }
             }
     }
 

@@ -10,6 +10,7 @@ import com.technologyfrontier.qide.json.StrictJson
 /**
  * 回路 JSON の構造上の指摘（機能設計書 1章「構造検証」）。
  *
+ * 規則は QOS-IF 0.1 3章と量子OSの実装（終端の measure はちょうど1つ、rx・rz は有限の theta 必須、未知キー不可）に合わせる。
  * これはエディター上の補助であり、最終判定は量子サービス（qosctl validate）が行う。
  * 指摘がなくても有効とは限らず、指摘があってもサービス側の判定を優先する。
  */
@@ -23,10 +24,12 @@ object CircuitStructure {
     /** 実行時に量子サービスが適用する量子ビット上限（構造上の上限とは別）。 */
     const val RUN_QUBIT_LIMIT = 20L
 
-    val SINGLE_QUBIT_GATES = setOf("h", "x", "z", "rx", "rz")
+    val ROTATION_GATES = setOf("rx", "rz")
+    val SINGLE_QUBIT_GATES = setOf("h", "x", "z") + ROTATION_GATES
     const val TWO_QUBIT_GATE = "cx"
     const val MEASURE = "measure"
     val ALL_OPS = SINGLE_QUBIT_GATES + TWO_QUBIT_GATE + MEASURE
+    private val ROOT_KEYS = setOf("schema_version", "n_qubits", "operations")
 
     enum class Severity { ERROR, WARNING }
 
@@ -60,10 +63,14 @@ object CircuitStructure {
             return findings
         }
 
+        // QOS-IF 0.1 3章・量子OS実装（circuit.py）に合わせた規則。最終判定は量子サービス。
+        root.keys.filter { it !in ROOT_KEYS }.forEach { error("/$it", "未知のキー \"$it\" です（schema_version・n_qubits・operations のみ）。") }
+
         val version = (root["schema_version"] as? JsonNumber)?.toLongExactOrNull()
         when {
             root["schema_version"] == null -> error("/schema_version", "schema_version がありません。")
-            version != SCHEMA_VERSION -> error("/schema_version", "schema_version は $SCHEMA_VERSION のみ対応しています。")
+            version == null -> error("/schema_version", "schema_version は整数である必要があります。")
+            version != SCHEMA_VERSION -> error("/schema_version", "schema_version $version は未対応です（$SCHEMA_VERSION のみ対応、SCHEMA_UNSUPPORTED）。")
         }
 
         val nQubits = (root["n_qubits"] as? JsonNumber)?.toLongExactOrNull()
@@ -72,12 +79,16 @@ object CircuitStructure {
             nQubits == null || nQubits !in MIN_QUBITS..MAX_QUBITS ->
                 error("/n_qubits", "n_qubits は $MIN_QUBITS〜$MAX_QUBITS の整数である必要があります。")
             nQubits > RUN_QUBIT_LIMIT ->
-                warn("/n_qubits", "実行時の上限は $RUN_QUBIT_LIMIT 量子ビットです。この回路は検証できても実行は拒否されます。")
+                warn("/n_qubits", "実行時の上限は $RUN_QUBIT_LIMIT 量子ビットです。この回路は検証できても実行は拒否されます（BACKEND_LIMIT）。")
         }
 
         val ops = root["operations"]
         if (ops !is JsonArray) {
-            error("/operations", "operations は配列である必要があります。")
+            error("/operations", if (ops == null) "operations がありません。" else "operations は配列である必要があります。")
+            return findings
+        }
+        if (ops.items.isEmpty()) {
+            error("/operations", "operations が空です。終端の measure が必要です。")
             return findings
         }
         if (ops.items.size > MAX_OPERATIONS) {
@@ -85,7 +96,7 @@ object CircuitStructure {
         }
 
         var measured = false
-        var reportedAfterMeasure = false
+        val last = ops.items.size - 1
         ops.items.forEachIndexed { index, item ->
             val path = "/operations/$index"
             if (item !is JsonObject) {
@@ -97,11 +108,25 @@ object CircuitStructure {
                 error("$path/op", "op は ${ALL_OPS.joinToString("・")} のいずれかである必要があります。")
                 return@forEachIndexed
             }
+            val allowedKeys = if (op in ROTATION_GATES) setOf("op", "qubits", "theta") else setOf("op", "qubits")
+            item.keys.filter { it !in allowedKeys }.forEach {
+                error("$path/$it", if (it == "theta") "theta は rx・rz だけに指定できます。" else "未知のキー \"$it\" です。")
+            }
             if (op == MEASURE) {
+                if (measured) {
+                    error(path, "measure は回路に1つだけ置けます。")
+                } else if (index != last) {
+                    error(path, "measure は最後の命令である必要があります（終端測定）。")
+                }
                 measured = true
-            } else if (measured && !reportedAfterMeasure) {
-                error(path, "測定の後にゲートがあります。測定は回路の終端に置いてください。")
-                reportedAfterMeasure = true
+            }
+            if (op in ROTATION_GATES) {
+                val theta = item["theta"]
+                when {
+                    theta == null -> error(path, "$op には角度 theta（ラジアン、有限の数値）が必要です。")
+                    theta !is JsonNumber || theta.text.toDoubleOrNull()?.isFinite() != true ->
+                        error("$path/theta", "theta は有限の数値（ラジアン）である必要があります。")
+                }
             }
             val qubits = item["qubits"]
             if (qubits !is JsonArray) {
@@ -134,7 +159,7 @@ object CircuitStructure {
             }
         }
         if (!measured) {
-            warn("/operations", "測定（measure）命令がありません。")
+            error("/operations", "終端の measure 命令がありません。")
         }
         return findings
     }

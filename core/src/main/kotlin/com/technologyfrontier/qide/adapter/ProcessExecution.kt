@@ -27,14 +27,17 @@ class JdkProcessLauncher : ProcessLauncher {
 }
 
 /**
- * 応答上限と監視期限。具体値は結合前に確定する（機能設計書 7.1）。ここでの既定値は仮値。
+ * 応答上限と監視期限（機能設計書 7.1）。
+ * run の監視期限は、量子サービスの実行期限 120 秒＋qosctl の通信余裕 30 秒（qosctl の応答待ち 150 秒）に、
+ * IDE 側の余裕 30 秒を加えた 180 秒。qosctl が先に TRANSPORT_ERROR（終了値 4）を返す前提とする。
+ * 量子OS側の値が確定・変更されたら合わせて見直す。
  */
 data class ExecutionLimits(
     val stdoutMaxBytes: Int = 16 * 1024 * 1024,
     val stderrMaxBytes: Int = 64 * 1024,
-    val validateTimeout: Duration = Duration.ofSeconds(60),
-    val statusTimeout: Duration = Duration.ofSeconds(30),
-    val runTimeout: Duration = Duration.ofMinutes(10),
+    val validateTimeout: Duration = Duration.ofSeconds(180),
+    val statusTimeout: Duration = Duration.ofSeconds(180),
+    val runTimeout: Duration = Duration.ofSeconds(180),
     /** 終了要求後、強制終了するまでの猶予。 */
     val terminateGrace: Duration = Duration.ofSeconds(3),
 )

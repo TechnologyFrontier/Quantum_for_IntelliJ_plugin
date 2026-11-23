@@ -68,6 +68,12 @@ src/main/kotlin/.../plugin/ IntelliJ 連携
 ./gradlew verifyPlugin
 ```
 
+実際の量子OS CLI と量子サービスを相手にした結合試験（[QuantumLinuxOS](https://github.com/TechnologyFrontier/QuantumLinuxOS) の `qosctl`／`qosd` を使用）:
+
+```bash
+scripts/real-qosctl-it.sh /path/to/qosctl /path/to/qosd
+```
+
 対象 IDE は `gradle.properties` の `platformVersion`（初期候補: IntelliJ IDEA 2025.3.6.2、ビルド 253）です。
 互換範囲（`pluginSinceBuild`／`pluginUntilBuild`）は Plugin Verifier と実機で確認したビルドに限ります。
 

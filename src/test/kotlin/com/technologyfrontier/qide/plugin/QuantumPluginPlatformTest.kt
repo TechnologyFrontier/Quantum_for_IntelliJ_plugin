@@ -48,14 +48,14 @@ class QuantumPluginPlatformTest : BasePlatformTestCase() {
         assertEquals("18446744073709551615", copy.seedText)
     }
 
-    fun testStructureInspectionReportsGateAfterMeasure() {
+    fun testStructureInspectionReportsMeasureNotLast() {
         myFixture.enableInspections(CircuitStructureInspection())
         myFixture.configureByText(
             "bad.circuit.json",
             """{"schema_version":1,"n_qubits":1,"operations":[{"op":"measure","qubits":[0]},{"op":"x","qubits":[0]}]}""",
         )
         val messages = myFixture.doHighlighting().filter { it.severity >= HighlightSeverity.WEAK_WARNING }.map { it.description }
-        assertTrue(messages.toString(), messages.any { it?.contains("測定の後にゲート") == true })
+        assertTrue(messages.toString(), messages.any { it?.contains("measure は最後の命令") == true })
     }
 
     fun testValidSampleHasNoStructureFindings() {

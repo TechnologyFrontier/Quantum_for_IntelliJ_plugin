@@ -57,14 +57,35 @@
 | shots の一致、明示 seed の照合、message で分岐しない | `QosctlResponses` | `QosctlResponsesTest` |
 | バックグラウンド処理と UI スレッド反映の分離 | `QosctlTask`、`RunCoordinator` + `QuantumUi.onUi` | — |
 
+## 実 qosctl との結合試験（`core/src/test/.../integration/RealQosctlIntegrationTest.kt`）
+
+`scripts/real-qosctl-it.sh <qosctl> <qosd>` で実行。2026-11-23 に量子OS 0.1.0（QuantumLinuxOS 3a37900）の
+ソースツリーから起動した qosd と実 qosctl に対して 14 件すべて合格。
+
+| 試験 | 確認内容 |
+|---|---|
+| status is ready | `{"state":"ready"}` |
+| bell circuit from design document | 1,024 ショットのキーが 00・11 の範囲内、合計 1,024（T-IDE-02） |
+| bit order follows measured_qubits | X(1)→measure(1,0) が "10"（QOS-IF の例） |
+| path with spaces and Japanese | 空白・日本語パスの validate／run（T-IDE-06） |
+| seed boundaries round trip and reproduce | 0・2⁵³＋1・2⁶⁴−1 の往復と同一条件での観測回数一致（T-IDE-03） |
+| omitted seed then rerun with returned seed | シード省略→返却シードで再実行して一致 |
+| 20 and 21 qubit boundary | 20 は実行可、21 は validate 可・run は BACKEND_LIMIT（終了値 2）（T-IDE-02） |
+| invalid measure and unknown schema are rejected | CIRCUIT_INVALID／SCHEMA_UNSUPPORTED（T-IDE-01） |
+| local structure check agrees with service validate | 17 通りで構造チェックとサービス判定が一致 |
+| busy while running, stop releases the slot… | 計算中の BUSY（終了値 3）、IDE からの停止でサービスが切断を検知し計算枠を解放、停止後の結果を採用しない（T-IDE-02） |
+| ide side timeout stops qosctl | IDE 側の監視期限超過で qosctl を停止し、計算枠も解放 |
+| service unavailable／access denied | 終了値 3 の SERVICE_UNAVAILABLE と ACCESS_DENIED を区別（T-IDE-04） |
+| cli rejects invalid seed text | CLI 側でも非正規シードを RUN_OPTION_INVALID で拒否 |
+
 ## 5章 受入試験との対応
 
 | 試験 | 自動化済みの範囲 | 実機（GUI 評価構成）で残る確認 |
 |---|---|---|
-| T-IDE-01 | サンプル妥当性・命名（上書きしない）、構造チェック | 未信頼プロジェクトで起動しないこと、CLI による不正測定・未知版の拒否 |
-| T-IDE-02 | 終了値 2/3/4、BUSY、停止・遅延結果の不採用（ダミー CLI） | ベル回路の実行、20／21 量子ビット境界（サービス側） |
-| T-IDE-03 | seed 0・2⁵³＋1・2⁶⁴−1 の保持、範囲外拒否、JSON 破損・合計不正の不採用 | 同一条件での観測回数一致（実サービス） |
-| T-IDE-04 | status の ready／busy と失敗区分の解釈 | サービス停止・権限不許可の実機確認、保守案内から何も起動しないこと |
+| T-IDE-01 | サンプル妥当性・命名（上書きしない）、構造チェック、CLI による不正測定・未知版の拒否（実 qosctl） | 未信頼プロジェクトで起動しないこと（GUI） |
+| T-IDE-02 | 終了値 2/3/4、BUSY、停止・遅延結果の不採用（ダミー CLI・実 qosctl）、ベル回路、20／21 量子ビット境界（実 qosctl） | GUI からの実行・停止操作 |
+| T-IDE-03 | seed 0・2⁵³＋1・2⁶⁴−1 の保持、範囲外拒否、JSON 破損・合計不正の不採用、同一条件での観測回数一致（実 qosctl） | GUI からの再実行 |
+| T-IDE-04 | ready／busy、サービス停止（SERVICE_UNAVAILABLE）と権限不許可（ACCESS_DENIED）の区別（実 qosctl） | 保守案内から何も起動しないこと（GUI） |
 | T-IDE-05 | Plugin Verifier（IU-253.33813.99：Compatible、オフライン） | ローカル ZIP 導入、GUI 評価構成でのオフライン実行 |
 | T-IDE-06 | 空白・日本語パス、seed 省略／0 の引数（実プロセス） | — |
-| T-IDE-07 | 3操作の成功、終了値 2/3/4、IPC 包み、破損 JSON、停止後の遅延応答 | 実 qosctl との結合 |
+| T-IDE-07 | 3操作の成功、終了値 2/3/4、IPC 包み、破損 JSON、停止後の遅延応答（ダミー CLI）、実 qosctl との結合 | — |

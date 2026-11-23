@@ -10,21 +10,21 @@
 |---|---|---|
 | 標準出力の応答上限 | 16 MiB（20量子ビット・100,000 shots の最大出力に余裕を持たせた値） | `core/.../adapter/ProcessExecution.kt` `ExecutionLimits` |
 | 標準エラーの応答上限 | 64 KiB | 同上 |
-| 監視期限 validate／status／run | 60 秒／30 秒／10 分 | 同上 |
+| 監視期限 validate／status／run | 各 180 秒（量子サービスの実行期限 120 秒＋qosctl の応答待ち余裕 30 秒＋IDE 側余裕 30 秒） | 同上 |
 | 停止要求後の強制終了までの猶予 | 3 秒（SIGTERM → SIGKILL） | 同上 |
 | qosctl の既定パス | `/usr/bin/qosctl`（導入側が `-Dqide.qosctl.path` で固定可能） | `plugin/settings/QosctlSettings.kt` |
 | 作業ディレクトリー | 利用者のホーム（導入側が `-Dqide.qosctl.workdir` で固定可能） | 同上 |
 | 対象 IDE ビルド | IntelliJ IDEA 2025.3.6.2（253.33813.99）、互換範囲 253.* | `gradle.properties` |
 
-## QOS-IF 0.1 に依存する仮定
+## QOS-IF 0.1 との整合（量子OSリポジトリ TechnologyFrontier/QuantumLinuxOS で確認済み）
 
-- **rx／rz の角度パラメーター名**: 設計書に記載がないため、スキーマと構造チェックでは角度を検査していません。
-  QOS-IF に従って `circuit.schema.json` と `CircuitStructure` に追加してください。
-- **終端測定の解釈**: 「measure の後にゲートを置かない」として構造チェックしています。同一量子ビットの複数回測定は検査していません。
-- **エラー code の一覧**: 分岐に使っているのは `BUSY` のみです。権限不許可・サービス停止などの code が確定したら、
-  `QosFailure.ServiceError.guidance` に案内を追加してください（message の文言では分岐しません）。
+- **rx／rz の角度**: `theta`（有限のラジアン値、rx・rz では必須、他の命令には不可）。スキーマと構造チェックに反映。
+- **終端測定**: `measure` はちょうど1つで最後の命令。`operations` は空不可。未知キーは不可。構造チェックに反映し、
+  17 通りの回路で構造チェックとサービスの validate の判定が一致することを結合試験で確認。
+- **エラー code**: QOS-IF 4章の code（ACCESS_DENIED・SERVICE_UNAVAILABLE・BACKEND_LIMIT・TIMEOUT・TRANSPORT_ERROR 等）と、
+  量子OS実装の暫定 code（USAGE_INVALID・FILE_UNREADABLE）ごとに案内を表示する（message の文言では分岐しない）。
 - **結果 JSON の未知の項目**: 将来の拡張に備えて無視します（IPC の包みを示す `protocol_version`、`ok`＋`result` は拒否）。
-- **measured_qubits の重複**: 検査していません。
+- **measured_qubits の重複**: サービス側で重複を拒否するため、IDE では検査していません。
 
 ## 実装方式の判断
 
@@ -41,7 +41,14 @@
   （開発コンテナで実際に発生したため、試験は `LC_ALL=C.UTF-8` で実行しています）。量子OSのデスクトップ評価構成で確認してください。
 - Plugin Verifier は `-offline` で実行しています（Marketplace に接続しない）。
 
+## 実 qosctl との結合（実施済み）
+
+`scripts/real-qosctl-it.sh` で、量子OSリポジトリのソースツリーから起動した `qosd`（許可用・拒否用の2つ）と
+pip で導入した実 `qosctl` を相手に `:core:realQosctlTest`（14 件）を実行し、すべて合格した。
+量子OSイメージ（systemd のソケット起動、quantum グループ）上ではなく、開発コンテナ上での確認である。
+
 ## 未実施（GUI 評価構成が必要）
 
-- 量子OS上のデスクトップ評価構成での実機確認（ローカル ZIP 導入、実 qosctl との結合、オフライン動作）。
-- 実行構成・結果ツールウィンドウ・保守案内ダイアログの操作確認（このリポジトリの試験はヘッドレス）。
+- IDE の GUI 起動（Xvfb 上の IntelliJ IDEA）による確認は、開発セッションの権限設定により IDE の起動が許可されず未実施。
+  ローカル ZIP 導入、実行構成・結果ツールウィンドウ・保守案内ダイアログの操作、未信頼プロジェクトでの起動抑止が残る。
+- 量子OSのデスクトップ評価構成（OS イメージ上）での確認。
