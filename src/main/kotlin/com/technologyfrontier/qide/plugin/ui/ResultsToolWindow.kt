@@ -84,9 +84,11 @@ class ResultsPanel(private val project: Project) : SimpleToolWindowPanel(true, t
         val header = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
             border = JBUI.Borders.empty(6)
-            add(statusLabel)
-            add(metaLabel)
-            add(errorArea)
+            // BoxLayout は部品ごとの alignmentX を揃えないと位置がずれるため、すべて左寄せにする。
+            listOf(statusLabel, metaLabel, errorArea).forEach {
+                it.alignmentX = java.awt.Component.LEFT_ALIGNMENT
+                add(it)
+            }
         }
         val body = JPanel(BorderLayout()).apply {
             add(header, BorderLayout.NORTH)

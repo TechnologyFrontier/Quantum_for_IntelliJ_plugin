@@ -67,6 +67,10 @@ class QuantumRunProcessHandler(
     }
 
     private fun finished(state: RunState) {
+        // 実行開始時は Run ウィンドウが前面に来るため、確定時に結果ウィンドウを表示する。
+        if (state is RunState.Succeeded || state is RunState.Failed) {
+            QuantumUi.onUi(project) { QuantumUi.showResults(project) }
+        }
         when (state) {
             is RunState.Succeeded -> {
                 val r = state.result

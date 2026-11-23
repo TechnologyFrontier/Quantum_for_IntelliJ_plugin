@@ -22,6 +22,9 @@ class MaintenanceGuideDialog(project: Project?) : DialogWrapper(project, false) 
 
     override fun createCenterPanel(): JComponent {
         val pane = JEditorPane("text/html", GUIDE_HTML).apply {
+            // HTML 既定のセリフ体ではなく、IDE の UI フォントで表示する。
+            putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true)
+            font = com.intellij.util.ui.UIUtil.getLabelFont()
             isEditable = false
             caretPosition = 0
         }

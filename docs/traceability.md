@@ -10,7 +10,7 @@
 |---|---|---|
 | 回路を開く・補助的な指摘（最終判定はサービス） | `plugin/editor/CircuitEditorSupport.kt`（JSON スキーマ、構造インスペクション）、`src/main/resources/schema/circuit.schema.json` | `QuantumPluginPlatformTest` |
 | 構造検証（版1、1〜64量子ビット、10,000命令、4 MiB、H・X・Z・RX・RZ・CX、終端測定、20量子ビットは実行時） | `core/domain/CircuitStructure.kt` | `CircuitStructureTest` |
-| 検証：信頼済みのみ、編集中は保存確認・キャンセルで起動しない、成功／コードと説明 | `plugin/ui/QuantumActions.kt`（ValidateCircuitAction）、`plugin/ui/QuantumUi.kt` | （GUI 手動確認：T-IDE-01） |
+| 検証：信頼済みのみ、編集中は保存確認・キャンセルで起動しない、成功／コードと説明 | `plugin/ui/QuantumActions.kt`（ValidateCircuitAction）、`plugin/ui/QuantumUi.kt` | GUI 評価 #2・#5・#6 |
 | サンプルを追加：3種、プロジェクト配下へ複製、上書きしない、自動実行しない | `plugin/samples/AddSampleAction.kt`、`core/samples/Samples.kt`、`core/src/main/resources/samples/` | `CircuitStructureTest`（サンプルの妥当性・命名） |
 | ベル回路サンプル | `core/src/main/resources/samples/bell.circuit.json`、`bell.md` | 同上 |
 
@@ -20,7 +20,7 @@
 |---|---|---|
 | shots 1〜100,000（既定 1,024）、seed 省略または 0〜2⁶⁴−1 の正規十進文字列 | `core/domain/RunInputs.kt` | `RunInputsTest` |
 | 回路パスの絶対化、一引数で渡す、シェルを介さない | `plugin/run/QuantumRunConfiguration.kt`、`core/adapter/QosctlArguments.kt`、`core/adapter/ProcessExecution.kt` | `RunInputsTest`、`QosctlCliClientTest` |
-| 実行前確認（対象ファイル・信頼状態・CLI パス・入力値）、明示操作のみ | `QuantumRunConfiguration.getState`／`checkConfiguration` | （GUI 手動確認） |
+| 実行前確認（対象ファイル・信頼状態・CLI パス・入力値）、明示操作のみ | `QuantumRunConfiguration.getState`／`checkConfiguration` | GUI 評価 #2・#18 |
 | プロジェクトごとに同時1件、BUSY を再試行しない | `core/application/RunCoordinator.kt` | `RunCoordinatorTest` |
 | 停止：CLI 終了を要求、IDE で止めたことを示す、停止後の着信・部分出力は採用しない | `RunCoordinator.stop`、`ProcessExecutor`、`plugin/run/QuantumRunState.kt` | `RunCoordinatorTest`、`QosctlCliClientTest` |
 | 遷移：待機→実行中→成功／失敗／停止、1回だけ確定、プロジェクト終了後は反映しない | `RunCoordinator`、`QuantumProjectService.dispose`、`QuantumUi.onUi` | `RunCoordinatorTest` |
@@ -41,7 +41,7 @@
 | 設計項目 | 実装 | 試験 |
 |---|---|---|
 | 状態を確認：明示操作で status、ready／busy、失敗は区分表示 | `CheckStatusAction` | `QosctlResponsesTest`、`QosctlCliClientTest` |
-| 保守案内：手順表示のみ（実行・資格情報取得・権限昇格・再起動をしない） | `plugin/ui/MaintenanceGuideDialog.kt` | （GUI 手動確認：T-IDE-04） |
+| 保守案内：手順表示のみ（実行・資格情報取得・権限昇格・再起動をしない） | `plugin/ui/MaintenanceGuideDialog.kt` | GUI 評価 #14 |
 | ローカル設定と共有設定の区別、CLI パスは導入側管理、プロジェクト設定で差し替えない | `plugin/settings/QosctlSettings.kt`（`RoamingType.DISABLED`、`-Dqide.qosctl.path`） | — |
 | CLI がない場合もサンプル閲覧・編集は可能、外部実行は無効 | `QuantumUi.checkCanLaunch`、`QuantumProjectService` | — |
 
@@ -78,14 +78,18 @@
 | service unavailable／access denied | 終了値 3 の SERVICE_UNAVAILABLE と ACCESS_DENIED を区別（T-IDE-04） |
 | cli rejects invalid seed text | CLI 側でも非正規シードを RUN_OPTION_INVALID で拒否 |
 
+## GUI 評価
+
+2026-11-23 に Xvfb 上の IntelliJ IDEA 2025.3.6.2 で ZIP 導入から実行・停止・BUSY・保存まで 21 項目を確認（[gui-evaluation/README.md](gui-evaluation/README.md)）。
+
 ## 5章 受入試験との対応
 
 | 試験 | 自動化済みの範囲 | 実機（GUI 評価構成）で残る確認 |
 |---|---|---|
-| T-IDE-01 | サンプル妥当性・命名（上書きしない）、構造チェック、CLI による不正測定・未知版の拒否（実 qosctl） | 未信頼プロジェクトで起動しないこと（GUI） |
-| T-IDE-02 | 終了値 2/3/4、BUSY、停止・遅延結果の不採用（ダミー CLI・実 qosctl）、ベル回路、20／21 量子ビット境界（実 qosctl） | GUI からの実行・停止操作 |
-| T-IDE-03 | seed 0・2⁵³＋1・2⁶⁴−1 の保持、範囲外拒否、JSON 破損・合計不正の不採用、同一条件での観測回数一致（実 qosctl） | GUI からの再実行 |
-| T-IDE-04 | ready／busy、サービス停止（SERVICE_UNAVAILABLE）と権限不許可（ACCESS_DENIED）の区別（実 qosctl） | 保守案内から何も起動しないこと（GUI） |
-| T-IDE-05 | Plugin Verifier（IU-253.33813.99：Compatible、オフライン） | ローカル ZIP 導入、GUI 評価構成でのオフライン実行 |
+| T-IDE-01 | サンプル妥当性・命名（上書きしない）、構造チェック、CLI による不正測定・未知版の拒否（実 qosctl） | —（GUI 評価で確認済み） |
+| T-IDE-02 | 終了値 2/3/4、BUSY、停止・遅延結果の不採用（ダミー CLI・実 qosctl）、ベル回路、20／21 量子ビット境界（実 qosctl） | —（GUI 評価で確認済み） |
+| T-IDE-03 | seed 0・2⁵³＋1・2⁶⁴−1 の保持、範囲外拒否、JSON 破損・合計不正の不採用、同一条件での観測回数一致（実 qosctl） | —（GUI 評価で確認済み） |
+| T-IDE-04 | ready／busy、サービス停止（SERVICE_UNAVAILABLE）と権限不許可（ACCESS_DENIED）の区別（実 qosctl） | —（GUI 評価で確認済み） |
+| T-IDE-05 | Plugin Verifier（IU-253.33813.99：Compatible、オフライン） | ZIP 導入・自動保存なしは GUI 評価で確認済み。量子OSイメージ上での確認は未実施 |
 | T-IDE-06 | 空白・日本語パス、seed 省略／0 の引数（実プロセス） | — |
 | T-IDE-07 | 3操作の成功、終了値 2/3/4、IPC 包み、破損 JSON、停止後の遅延応答（ダミー CLI）、実 qosctl との結合 | — |

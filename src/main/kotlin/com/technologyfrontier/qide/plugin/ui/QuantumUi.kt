@@ -30,8 +30,12 @@ object QuantumUi {
         append("\n").append(failure.guidance)
     }
 
+    /** タイトルは短く（操作名と code）、区分・詳細・案内は本文に置く。 */
     fun notifyFailure(project: Project?, operation: String, failure: QosFailure) {
-        notify(project, "$operation：${failure.title}", escape(failure.detail) + "<br/>" + escape(failure.guidance), NotificationType.ERROR)
+        val code = (failure as? QosFailure.ServiceError)?.code
+        val title = if (code != null) "「$operation」に失敗しました（$code）" else "「$operation」に失敗しました"
+        val body = listOf(failure.title, failure.detail, failure.guidance).filter { it.isNotBlank() }.joinToString("<br/>") { escape(it) }
+        notify(project, title, body, NotificationType.ERROR)
     }
 
     fun escape(text: String): String = text
@@ -47,7 +51,7 @@ object QuantumUi {
         if (!isTrusted(project)) {
             notify(
                 project,
-                "$operation を実行できません",
+                "「$operation」を実行できません",
                 "このプロジェクトは信頼されていません。信頼済みプロジェクトでのみ qosctl を起動します。",
                 NotificationType.WARNING,
             )
@@ -57,7 +61,7 @@ object QuantumUi {
         if (problem != null) {
             notify(
                 project,
-                "$operation を実行できません",
+                "「$operation」を実行できません",
                 escape(problem) + "<br/>設定 → ツール → 量子OS で qosctl のパスを確認してください。サンプルの閲覧と編集は引き続き利用できます。",
                 NotificationType.WARNING,
             )

@@ -31,7 +31,7 @@
 
         <toolWindow id="Quantum Results"
                     anchor="bottom"
-                    icon="AllIcons.Toolwindows.ToolWindowRun"
+                    icon="/icons/quantumResults.svg"
                     canCloseContents="false"
                     factoryClass="com.technologyfrontier.qide.plugin.ui.QuantumResultsToolWindowFactory"/>
 

@@ -47,8 +47,12 @@
 pip で導入した実 `qosctl` を相手に `:core:realQosctlTest`（14 件）を実行し、すべて合格した。
 量子OSイメージ（systemd のソケット起動、quantum グループ）上ではなく、開発コンテナ上での確認である。
 
-## 未実施（GUI 評価構成が必要）
+## GUI 評価（実施済み）
 
-- IDE の GUI 起動（Xvfb 上の IntelliJ IDEA）による確認は、開発セッションの権限設定により IDE の起動が許可されず未実施。
-  ローカル ZIP 導入、実行構成・結果ツールウィンドウ・保守案内ダイアログの操作、未信頼プロジェクトでの起動抑止が残る。
-- 量子OSのデスクトップ評価構成（OS イメージ上）での確認。
+Xvfb 上の IntelliJ IDEA 2025.3.6.2 に ZIP を GUI から導入し、実 qosctl／qosd と結合して 21 項目を確認した。
+評価中に見つかった表示上の不具合 5 件は修正し、再確認済み。詳細と証跡は [gui-evaluation/README.md](gui-evaluation/README.md)。
+
+## 未実施
+
+- 量子OSのデスクトップ評価構成（OS イメージ上、systemd のソケット起動・quantum グループ）での確認。
+- 対象 IDE ビルドの最終固定（現在は 2025.3.6.2 で確認）。
