@@ -1,0 +1,77 @@
+<idea-plugin>
+    <id>com.technologyfrontier.quantum-os-ide</id>
+    <name>Quantum OS IDE</name>
+    <vendor>Technology Frontier</vendor>
+    <description><![CDATA[
+    <p>Development tools for Quantum OS: edit and validate circuit JSON, run circuits through the local
+    <code>qosctl</code> CLI, and inspect measurement counts and seeds.</p>
+    <p>量子OS向けの開発プラグインです。回路JSONの編集・検証、同一量子OS上の <code>qosctl</code> による実行、
+    観測回数とシードの確認・再実行、サンプルの取り込み、量子サービスの状態確認と保守案内を提供します。</p>
+    <ul>
+      <li>外部コマンドは信頼済みプロジェクトで利用者が明示操作した場合のみ起動します。</li>
+      <li>管理された絶対パスの qosctl を、シェルを介さず個別の引数で起動します。</li>
+      <li>結果・シードは既定ではメモリにのみ保持し、自動保存や外部送信を行いません。</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.json</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Quantum OS IDE" displayType="BALLOON"/>
+
+        <applicationConfigurable parentId="tools"
+                                 instance="com.technologyfrontier.qide.plugin.settings.QosctlConfigurable"
+                                 id="qide.settings"
+                                 displayName="量子OS"/>
+
+        <configurationType implementation="com.technologyfrontier.qide.plugin.run.QuantumRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.technologyfrontier.qide.plugin.run.QuantumRunConfigurationProducer"/>
+        <programRunner implementation="com.technologyfrontier.qide.plugin.run.QuantumProgramRunner"/>
+
+        <toolWindow id="Quantum Results"
+                    anchor="bottom"
+                    icon="AllIcons.Toolwindows.ToolWindowRun"
+                    canCloseContents="false"
+                    factoryClass="com.technologyfrontier.qide.plugin.ui.QuantumResultsToolWindowFactory"/>
+
+        <localInspection language="JSON"
+                         shortName="QuantumCircuitStructure"
+                         displayName="量子回路の構造チェック"
+                         groupName="量子OS"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="com.technologyfrontier.qide.plugin.editor.CircuitStructureInspection"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory implementation="com.technologyfrontier.qide.plugin.editor.CircuitSchemaProviderFactory"/>
+    </extensions>
+
+    <actions>
+        <group id="QuantumIde.Group" text="量子OS" popup="true">
+            <action id="QuantumIde.ValidateCircuit"
+                    class="com.technologyfrontier.qide.plugin.ui.ValidateCircuitAction"
+                    text="回路を検証"
+                    description="qosctl validate で回路JSONを検証します"/>
+            <action id="QuantumIde.AddSample"
+                    class="com.technologyfrontier.qide.plugin.samples.AddSampleAction"
+                    text="サンプルを追加…"
+                    description="ビット反転・重ね合わせ・ベルのサンプルをプロジェクトに追加します"/>
+            <separator/>
+            <action id="QuantumIde.CheckStatus"
+                    class="com.technologyfrontier.qide.plugin.ui.CheckStatusAction"
+                    text="状態を確認"
+                    description="qosctl status で量子サービスの状態（ready／busy）を確認します"
+                    icon="AllIcons.Actions.Refresh"/>
+            <action id="QuantumIde.MaintenanceGuide"
+                    class="com.technologyfrontier.qide.plugin.ui.MaintenanceGuideAction"
+                    text="保守案内（管理者向け）"
+                    description="qos-admin による更新手順を表示します（IDEからは実行しません）"
+                    icon="AllIcons.Actions.Help"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>
