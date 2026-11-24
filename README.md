@@ -97,3 +97,10 @@ scripts/real-qosctl-it.sh /path/to/qosctl /path/to/qosd
 2. `bell.circuit.json` を右クリック → 量子OS → **回路を検証**。
 3. 同じファイルを右クリック → **実行**。実行構成で shots（1〜100,000、既定 1,024）と seed（空欄＝省略、0〜2⁶⁴−1）を指定できます。
 4. **Quantum Results** で結果を確認。**再実行** は結果の seed と shots を使い、回路が変更されていれば警告します。**結果JSONを保存** で保存先を選んで保存します。
+
+## ライセンス
+
+MIT License と Apache License 2.0 のデュアルライセンスです（`SPDX-License-Identifier: MIT OR Apache-2.0`）。利用者はどちらか一方を選べます。
+全文は [LICENSE-MIT](LICENSE-MIT) と [LICENSE-APACHE](LICENSE-APACHE) を参照してください。
+
+IntelliJ IDEA・IntelliJ Platform は本リポジトリに含まれず、JetBrains のライセンスに従います。
